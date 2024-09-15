@@ -20,7 +20,10 @@ import { useDispatch } from "react-redux";
 import { addTodo, deleteTodo, editTodo } from "@/store/todoReducer";
 import dayjs from "dayjs";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { schedulePushNotification } from "@/utils/notification";
+import {
+  schedulePushNotification,
+  stopSchedulePushNotification,
+} from "@/utils/notification";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -36,6 +39,7 @@ export default function HomeScreen() {
   const dispatch = useDispatch();
 
   const todo = useSelector((state: RootState) => state.todoReducer);
+  console.log("🚀 ~ HomeScreen ~ todo:", todo);
 
   const [tab, setTab] = useState("monthly");
   const isMonthly = tab === "monthly";
@@ -88,7 +92,9 @@ export default function HomeScreen() {
     }
   }, [todo, selectedDate, isMonthly]);
 
-  const uncompletedTodo = todoList.filter((item) => !item.completed);
+  const uncompletedTodo = useMemo(() => {
+    return todoList.filter((item) => !item.completed);
+  }, [todoList]);
 
   const saveTodo = (data: TodoListType) => {
     if (mode === "edit") {
@@ -165,6 +171,8 @@ export default function HomeScreen() {
   useEffect(() => {
     if (uncompletedTodo.length > 0) {
       schedulePushNotification("You have uncompleted todo");
+    } else {
+      stopSchedulePushNotification();
     }
   }, [uncompletedTodo]);
 

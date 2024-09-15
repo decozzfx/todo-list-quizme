@@ -21,6 +21,9 @@ export async function schedulePushNotification(data: string) {
     trigger: { seconds: 5, repeats: true },
   });
 }
+export async function stopSchedulePushNotification() {
+  await Notifications.cancelAllScheduledNotificationsAsync();
+}
 
 export async function registerForPushNotificationsAsync() {
   let token;
