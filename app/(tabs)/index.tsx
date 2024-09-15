@@ -11,13 +11,7 @@ import {
 import { Calendar } from "react-native-calendars";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import {
-  DayType,
-  MarkedDate,
-  MarkedDates,
-  TodoListStateType,
-  TodoListType,
-} from "@/types";
+import { DayType, MarkedDate, MarkedDates, TodoListType } from "@/types";
 import { Controller, set, useForm } from "react-hook-form";
 import { Checkbox, HelperText, TextInput } from "react-native-paper";
 import { useSelector } from "react-redux";
@@ -41,7 +35,7 @@ const initialSelectedDate = {
 export default function HomeScreen() {
   const dispatch = useDispatch();
 
-  const { todo } = useSelector((state: RootState) => state);
+  const todo = useSelector((state: RootState) => state.todoReducer);
 
   const [tab, setTab] = useState("monthly");
   const isMonthly = tab === "monthly";
