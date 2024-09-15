@@ -1,12 +1,13 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import todoReducer from "./todoReducer";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { persistReducer } from "redux-persist";
+import { createExpoFileSystemStorage } from "redux-persist-expo-file-system-storage";
+
+export const expoFileSystemStorage = createExpoFileSystemStorage();
 
 const persistConfig = {
   key: "root",
-  storage: AsyncStorage,
-  whitelist: ["todoReducer"], // reducer yang akan di-persist
+  storage: expoFileSystemStorage,
 };
 
 const rootReducer = combineReducers({

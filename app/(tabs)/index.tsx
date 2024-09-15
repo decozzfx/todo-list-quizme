@@ -7,6 +7,8 @@ import {
   Modal,
   Dimensions,
   FlatList,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Calendar } from "react-native-calendars";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -39,7 +41,6 @@ export default function HomeScreen() {
   const dispatch = useDispatch();
 
   const todo = useSelector((state: RootState) => state.todoReducer);
-  console.log("🚀 ~ HomeScreen ~ todo:", todo);
 
   const [tab, setTab] = useState("monthly");
   const isMonthly = tab === "monthly";
@@ -292,75 +293,80 @@ export default function HomeScreen() {
         visible={modalVisible}
       >
         <View style={Styles.centeredView}>
-          <View style={Styles.modalView}>
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                width: "100%",
-              }}
-            >
-              <Text style={Styles.modalText}>Create Todo</Text>
-              {mode === "edit" && (
-                <TouchableOpacity onPress={onPressDelete}>
-                  <Ionicons name="trash-sharp" color="red" size={24} />
-                </TouchableOpacity>
-              )}
-            </View>
-
-            <View style={Styles.formContainer}>
-              <Controller
-                control={control}
-                name="text"
-                rules={{ required: true }}
-                render={({ field: { onChange, value } }) => (
-                  <>
-                    <TextInput
-                      style={{ width: "100%" }}
-                      mode="outlined"
-                      label="Todo"
-                      placeholder="Enter your todo"
-                      value={value}
-                      onChangeText={onChange}
-                      error={Boolean(errors.text)}
-                    />
-                    <HelperText type="error" visible={Boolean(errors.text)}>
-                      {errors.text && "Todo is required"}
-                    </HelperText>
-                  </>
-                )}
-              />
-              <Controller
-                control={control}
-                name="completed"
-                render={({ field: { onChange, value } }) => (
-                  <Checkbox.Item
-                    label="Completed"
-                    status={value ? "checked" : "unchecked"}
-                    onPress={() => onChange(!value)}
-                  />
-                )}
-              />
-            </View>
-
-            <View style={Styles.buttonModalContainer}>
-              <TouchableOpacity
-                style={[Styles.buttonModal, Styles.buttonCloseModal]}
-                onPress={() => {
-                  toggleModalVisible("add");
-                  reset();
+          <KeyboardAvoidingView
+            behavior="padding"
+            keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
+          >
+            <View style={Styles.modalView}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  width: "100%",
                 }}
               >
-                <Text style={Styles.textButtonModal}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[Styles.buttonModal, Styles.buttonCloseModal]}
-                onPress={handleSubmit(saveTodo)}
-              >
-                <Text style={Styles.textButtonModal}>Save</Text>
-              </TouchableOpacity>
+                <Text style={Styles.modalText}>Create Todo</Text>
+                {mode === "edit" && (
+                  <TouchableOpacity onPress={onPressDelete}>
+                    <Ionicons name="trash-sharp" color="red" size={24} />
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              <View style={Styles.formContainer}>
+                <Controller
+                  control={control}
+                  name="text"
+                  rules={{ required: true }}
+                  render={({ field: { onChange, value } }) => (
+                    <>
+                      <TextInput
+                        style={{ width: "100%" }}
+                        mode="outlined"
+                        label="Todo"
+                        placeholder="Enter your todo"
+                        value={value}
+                        onChangeText={onChange}
+                        error={Boolean(errors.text)}
+                      />
+                      <HelperText type="error" visible={Boolean(errors.text)}>
+                        {errors.text && "Todo is required"}
+                      </HelperText>
+                    </>
+                  )}
+                />
+                <Controller
+                  control={control}
+                  name="completed"
+                  render={({ field: { onChange, value } }) => (
+                    <Checkbox.Item
+                      label="Completed"
+                      status={value ? "checked" : "unchecked"}
+                      onPress={() => onChange(!value)}
+                    />
+                  )}
+                />
+              </View>
+
+              <View style={Styles.buttonModalContainer}>
+                <TouchableOpacity
+                  style={[Styles.buttonModal, Styles.buttonCloseModal]}
+                  onPress={() => {
+                    toggleModalVisible("add");
+                    reset();
+                  }}
+                >
+                  <Text style={Styles.textButtonModal}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[Styles.buttonModal, Styles.buttonCloseModal]}
+                  onPress={handleSubmit(saveTodo)}
+                >
+                  <Text style={Styles.textButtonModal}>Save</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
 
