@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   TouchableOpacity,
   StyleSheet,
@@ -9,13 +9,14 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { Calendar } from "react-native-calendars";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { DayType, MarkedDate, MarkedDates, TodoListType } from "@/types";
 import { Controller, set, useForm } from "react-hook-form";
-import { Checkbox, HelperText, TextInput } from "react-native-paper";
+import { Button, Checkbox, HelperText, TextInput } from "react-native-paper";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { useDispatch } from "react-redux";
@@ -26,6 +27,14 @@ import {
   schedulePushNotification,
   stopSchedulePushNotification,
 } from "@/utils/notification";
+import { GestureDetector } from "react-native-gesture-handler";
+import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+import Animated, {
+  Extrapolation,
+  interpolate,
+  SharedValue,
+  useAnimatedStyle,
+} from "react-native-reanimated";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -41,6 +50,7 @@ export default function HomeScreen() {
   const dispatch = useDispatch();
 
   const todo = useSelector((state: RootState) => state.todoReducer);
+  const swipeableRow = useRef(null);
 
   const [tab, setTab] = useState("monthly");
   const isMonthly = tab === "monthly";
@@ -100,8 +110,18 @@ export default function HomeScreen() {
   const saveTodo = (data: TodoListType) => {
     if (mode === "edit") {
       dispatch(editTodo(data));
+      if (data.completed) {
+        schedulePushNotification({
+          title: "You have completed todo",
+          message: "Please check your todo list",
+        });
+      }
     } else {
       dispatch(addTodo({ ...data, date: selectedDate || "" }));
+      schedulePushNotification({
+        title: "You have new todo",
+        message: "Please check your todo list",
+      });
     }
     toggleModalVisible("add");
     reset();
@@ -109,7 +129,6 @@ export default function HomeScreen() {
 
   const onPressDelete = () => {
     dispatch(deleteTodo(getValues("id")));
-    toggleModalVisible("add");
     reset();
   };
 
@@ -154,6 +173,7 @@ export default function HomeScreen() {
   };
 
   const toggleModalVisible = (mode: "add" | "edit", item?: TodoListType) => {
+    setMode(mode);
     if (mode === "edit") {
       setValue("text", item?.text || "");
       setValue("completed", item?.completed || false);
@@ -162,20 +182,36 @@ export default function HomeScreen() {
       setValue("id", item?.id);
     }
     setModalVisible((p) => !p);
-    setMode(mode);
   };
 
   const toggleDatePickerVisible = () => {
     setModalDatePickerVisible((p) => !p);
   };
 
-  useEffect(() => {
-    if (uncompletedTodo.length > 0) {
-      schedulePushNotification("You have uncompleted todo");
-    } else {
-      stopSchedulePushNotification();
-    }
-  }, [uncompletedTodo]);
+  // useEffect(() => {
+  //   if (uncompletedTodo.length > 0) {
+  //     schedulePushNotification({
+  //       title: "You have uncompleted todo",
+  //       message: "Please check your todo list",
+  //     });
+  //   } else {
+  //     // stopSchedulePushNotification();
+  //   }
+  // }, [uncompletedTodo]);
+
+  const renderRightActions = (
+    progress: SharedValue<number>,
+    dragX: SharedValue<number>
+  ) => {
+    console.log("🚀 ~ renderRightActions ~ progress:", progress);
+    console.log("🚀 ~ renderRightActions ~ dragX:", dragX);
+
+    return (
+      <TouchableOpacity style={{ padding: 10 }} onPress={onPressDelete}>
+        <Ionicons name="trash-sharp" color="red" size={24} />
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <>
@@ -243,31 +279,38 @@ export default function HomeScreen() {
           data={todoList}
           style={{ width: screenWidth * 0.9, marginHorizontal: "auto" }}
           renderItem={({ item }) => (
-            <TouchableOpacity
-              onPress={() => toggleModalVisible("edit", item)}
-              style={Styles.todoCardContainer}
+            <Swipeable
+              ref={swipeableRow}
+              renderRightActions={(progress, dragAnimatedVal) =>
+                renderRightActions(progress, dragAnimatedVal)
+              }
             >
-              <View style={Styles.todoCardLeft}>
-                <Ionicons
-                  size={24}
-                  color={item.completed ? "green" : "gray"}
-                  name={"checkmark-circle"}
-                />
-                <Text
-                  style={[
-                    Styles.todoCardText,
-                    {
-                      textDecorationLine: item.completed
-                        ? "line-through"
-                        : "none",
-                    },
-                  ]}
-                >
-                  {item.text}
-                </Text>
-              </View>
-              <Text style={Styles.todoCardText}>{item.date.dateString}</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => toggleModalVisible("edit", item)}
+                style={Styles.todoCardContainer}
+              >
+                <View style={Styles.todoCardLeft}>
+                  <Ionicons
+                    size={24}
+                    color={item.completed ? "green" : "gray"}
+                    name={"checkmark-circle"}
+                  />
+                  <Text
+                    style={[
+                      Styles.todoCardText,
+                      {
+                        textDecorationLine: item.completed
+                          ? "line-through"
+                          : "none",
+                      },
+                    ]}
+                  >
+                    {item.text}
+                  </Text>
+                </View>
+                <Text style={Styles.todoCardText}>{item.date.dateString}</Text>
+              </TouchableOpacity>
+            </Swipeable>
           )}
           keyExtractor={(_, index) => index.toString()}
           ListEmptyComponent={
@@ -305,7 +348,7 @@ export default function HomeScreen() {
                   width: "100%",
                 }}
               >
-                <Text style={Styles.modalText}>Create Todo</Text>
+                <Text style={Styles.modalText}>Todo</Text>
                 {mode === "edit" && (
                   <TouchableOpacity onPress={onPressDelete}>
                     <Ionicons name="trash-sharp" color="red" size={24} />

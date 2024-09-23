@@ -11,14 +11,20 @@ Notifications.setNotificationHandler({
   }),
 });
 
-export async function schedulePushNotification(data: string) {
+export async function schedulePushNotification({
+  title,
+  message,
+}: {
+  title: string;
+  message: string;
+}) {
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: "You've got notification! 🔔",
-      body: "Here is the notification body",
+      title: title,
+      body: message,
       data: { data: "goes here" },
     },
-    trigger: { seconds: 5, repeats: true },
+    trigger: { seconds: 1 },
   });
 }
 export async function stopSchedulePushNotification() {
